@@ -188,14 +188,25 @@ function openGiftModal(product) {
 
   const storeButton = document.getElementById("chooseStore");
   const pixButton = document.getElementById("choosePix");
+  const creditButton = document.getElementById("chooseCredit");
 
   const storeAllowed = !product.cash_only && Boolean(product.store_url);
-  storeButton.classList.toggle("hidden", !storeAllowed);
+  const creditAllowed = Boolean(product.payment_url);
 
-  if (!storeAllowed) {
+  storeButton.classList.toggle("hidden", !storeAllowed);
+  creditButton.classList.toggle("hidden", !creditAllowed);
+
+  // Deixa a grade visualmente equilibrada dependendo das opções disponíveis.
+  pixButton.style.gridColumn = "";
+  creditButton.style.gridColumn = "";
+
+  const visibleOptions = [storeAllowed, true, creditAllowed].filter(Boolean).length;
+
+  if (visibleOptions === 1) {
     pixButton.style.gridColumn = "1 / -1";
-  } else {
+  } else if (visibleOptions === 2 && !storeAllowed && creditAllowed) {
     pixButton.style.gridColumn = "";
+    creditButton.style.gridColumn = "";
   }
 
   chooseStep.classList.remove("hidden");
@@ -242,9 +253,13 @@ async function reserveGift(method) {
   const product = state.selectedProduct;
   if (!product) return null;
 
-  const button = method === "store"
-    ? document.getElementById("chooseStore")
-    : document.getElementById("choosePix");
+  const buttonMap = {
+    store: document.getElementById("chooseStore"),
+    pix: document.getElementById("choosePix"),
+    credit: document.getElementById("chooseCredit")
+  };
+
+  const button = buttonMap[method];
 
   const oldText = button.innerHTML;
   button.disabled = true;
@@ -385,24 +400,31 @@ document.getElementById("choosePix").addEventListener("click", async () => {
     }
   });
 
-  document.getElementById("reportPix").addEventListener("click", reportPixPayment);
+  document.getElementById("reportPix").addEventListener("click", () => reportPayment("pix"));
   await loadProducts();
 });
 
-async function reportPixPayment() {
+async function reportPayment(method) {
   if (!state.reservation?.reservation_token) return;
 
-  const button = document.getElementById("reportPix");
-  button.disabled = true;
-  button.textContent = "Avisando...";
+  const buttonId = method === "credit" ? "reportCredit" : "reportPix";
+  const button = document.getElementById(buttonId);
 
-  const { error } = await sb.rpc("report_pix_payment", {
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Avisando...";
+  }
+
+  const { error } = await sb.rpc("report_payment", {
     p_token: state.reservation.reservation_token
   });
 
   if (error) {
-    button.disabled = false;
-    button.textContent = "✓ Já fiz o PIX";
+    if (button) {
+      button.disabled = false;
+      button.textContent = method === "credit" ? "✓ Já fiz o pagamento" : "✓ Já fiz o PIX";
+    }
+
     showToast(error.message || "Não foi possível registrar o aviso.");
     return;
   }
@@ -412,7 +434,7 @@ async function reportPixPayment() {
       <div class="result-icon">💌</div>
       <h2>Recebemos seu aviso!</h2>
       <p>
-        O presente continua reservado e vamos conferir o PIX para confirmar no nosso painel.
+        O presente continua reservado e vamos conferir o pagamento no nosso painel.
         Muito obrigado! ♡
       </p>
       <button class="button button-dark full" data-finish>Voltar para a lista</button>
@@ -421,5 +443,57 @@ async function reportPixPayment() {
 
   resultStep.querySelector("[data-finish]").addEventListener("click", closeModal);
 }
+
+document.getElementById("chooseCredit").addEventListener("click", async () => {
+  const product = state.selectedProduct;
+
+  if (!product || !product.payment_url) {
+    showToast("Este presente não possui pagamento por cartão habilitado.");
+    return;
+  }
+
+  const reservation = await reserveGift("credit");
+  if (!reservation) return;
+
+  const paymentUrl = safeUrl(product.payment_url);
+
+  chooseStep.classList.add("hidden");
+  resultStep.classList.remove("hidden");
+
+  resultStep.innerHTML = `
+    <div class="result-box">
+      <div class="result-icon">💳</div>
+      <h2>Pagamento no cartão</h2>
+      <p>
+        Reservamos <b>${escapeHtml(product.name)}</b> para você por
+        ${config.RESERVATION_HOURS} horas.
+        Clique abaixo para abrir o pagamento seguro do Mercado Pago.
+      </p>
+
+      <div class="result-actions">
+        <a class="button button-dark"
+           href="${paymentUrl}"
+           target="_blank"
+           rel="noopener noreferrer">
+          Abrir Mercado Pago ↗
+        </a>
+
+        <button class="button button-light" id="reportCredit">
+          ✓ Já fiz o pagamento
+        </button>
+      </div>
+
+      <p class="reservation-note">
+        Depois de pagar, volte aqui e clique em “Já fiz o pagamento”.
+        Nós conferimos no Mercado Pago e confirmamos no painel.
+      </p>
+    </div>
+  `;
+
+  document.getElementById("reportCredit")
+    .addEventListener("click", () => reportPayment("credit"));
+
+  await loadProducts();
+});
 
 loadProducts();
