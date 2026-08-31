@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#8b735d">
+  <meta name="description" content="Lista de presentes do nosso Chá de Panela">
+  <title>Nosso Chá de Panela ♡</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <header class="hero">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <div class="eyebrow">🏡 Nosso futuro cantinho</div>
+
+        <!-- TROQUE OS NOMES AQUI -->
+        <h1>Chá de Panela de <span>Henrique & Marry</span></h1>
+
+        <p>
+          Estamos começando a montar o nosso lar e preparamos uma listinha
+          com algumas coisas que vão fazer parte dessa nova fase.
+          Escolha do seu jeitinho: comprando na loja ou presenteando via PIX. ♡
+        </p>
+
+        <div class="hero-actions">
+          <a class="button button-dark" href="#presentes">🎁 Ver presentes</a>
+          <a class="button button-light" href="#como-funciona">Como funciona?</a>
+        </div>
+
+        <div class="event-mini">
+          <div><b>📅 Novembro de 2026</b><small>19/11/2026</small></div>
+          <div><b>📍 Chá de Panela</b><small>Local a definir</small></div>
+        </div>
+      </div>
+
+      <div class="memory-card">
+        <span class="tape tape-a"></span>
+        <span class="tape tape-b"></span>
+        <img src="assets/casal-infancia.png" alt="Foto de infância do casal">
+        <p>Anos depois veio o chá de panela. 😂 ♡</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="section soft-section" id="como-funciona">
+      <div class="container">
+        <div class="section-title">
+          <span>Bem simples</span>
+          <h2>Como funciona?</h2>
+          <p>Você escolhe um presente, diz seu nome e decide como prefere presentear.</p>
+        </div>
+
+        <div class="steps">
+          <article class="step">
+            <div>01</div>
+            <h3>Escolha</h3>
+            <p>Encontre um item que queira nos dar.</p>
+          </article>
+          <article class="step">
+            <div>02</div>
+            <h3>Reserve</h3>
+            <p>Coloque seu nome. Ele ficará visível somente para nós.</p>
+          </article>
+          <article class="step">
+            <div>03</div>
+            <h3>Presenteie</h3>
+            <p>Compre na loja indicada ou envie o valor por PIX.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="presentes">
+      <div class="container">
+        <div class="section-title">
+          <span>Nossa listinha</span>
+          <h2>Presentes para o lar</h2>
+          <p>
+            Itens marcados como escolhidos ficam indisponíveis para evitar presentes repetidos.
+          </p>
+        </div>
+
+        <div class="toolbar">
+          <div class="filters" id="filters">
+            <button class="filter active" data-filter="todos">Todos</button>
+          </div>
+          <div class="legend">
+            <span><i class="dot available-dot"></i> Disponível</span>
+            <span><i class="dot reserved-dot"></i> Escolhido</span>
+          </div>
+        </div>
+
+        <div id="loading" class="loading">Carregando os presentes... ♡</div>
+        <div id="giftGrid" class="gift-grid"></div>
+        <div id="emptyState" class="empty-state hidden">
+          Nenhum presente encontrado nessa categoria.
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container closing-note">
+        <div>
+          <span>♡</span>
+          <h2>O melhor presente é dividir esse momento com vocês.</h2>
+          <p>
+            A lista é só uma ajudinha para o começo do nosso lar.
+            Obrigado por fazer parte dessa história.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Feito com carinho para o nosso Chá de Panela ♡
+    <a href="admin.html" class="admin-link" aria-label="Área administrativa">•</a>
+  </footer>
+
+  <!-- Modal de escolha -->
+  <div class="modal hidden" id="giftModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal></div>
+
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="modal-close" data-close-modal aria-label="Fechar">×</button>
+
+      <div id="chooseStep">
+        <span class="modal-kicker">Você escolheu</span>
+        <h2 id="modalTitle">Presente</h2>
+        <p id="modalPrice" class="modal-price"></p>
+
+        <label class="field">
+          <span>Seu nome</span>
+          <input id="guestName" maxlength="80" autocomplete="name" placeholder="Ex.: Maria">
+          <small>Seu nome aparecerá somente na nossa área privada.</small>
+        </label>
+
+        <p class="choice-title">Como prefere presentear?</p>
+
+        <div class="choice-grid">
+          <button class="choice-card" id="chooseStore">
+            <span class="choice-icon">🛒</span>
+            <b>Comprar na loja</b>
+            <small>Reservamos o item e abrimos o link da loja.</small>
+          </button>
+
+          <button class="choice-card" id="choosePix">
+            <span class="choice-icon">💚</span>
+            <b>Presentear via PIX</b>
+            <small>Você envia diretamente para a gente.</small>
+          </button>
+        </div>
+
+        <p class="reservation-note">
+          A reserva dura 24 horas enquanto o presente ainda não for confirmado.
+        </p>
+      </div>
+
+      <div id="resultStep" class="hidden"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

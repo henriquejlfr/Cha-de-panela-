@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Admin | Chá de Panela</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="admin-body">
+  <main class="admin-shell">
+    <section id="loginView" class="login-card">
+      <div class="eyebrow">🔐 Área privada</div>
+      <h1>Painel do Chá</h1>
+      <p>Entre com o usuário criado no Supabase.</p>
+
+      <form id="loginForm">
+        <label class="field">
+          <span>E-mail</span>
+          <input type="email" id="email" required autocomplete="email">
+        </label>
+
+        <label class="field">
+          <span>Senha</span>
+          <input type="password" id="password" required autocomplete="current-password">
+        </label>
+
+        <button class="button button-dark full" type="submit">Entrar</button>
+        <p id="loginError" class="error-text"></p>
+      </form>
+    </section>
+
+    <section id="dashboardView" class="hidden">
+      <div class="admin-topbar">
+        <div>
+          <span class="modal-kicker">Painel administrativo</span>
+          <h1>Nosso Chá de Panela</h1>
+        </div>
+        <div class="admin-actions">
+          <a class="button button-light" href="index.html">← Ver site</a>
+          <button class="button button-dark" id="logoutButton">Sair</button>
+        </div>
+      </div>
+
+      <div class="stats" id="stats"></div>
+
+      <div class="admin-grid">
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <span class="modal-kicker">Cadastro</span>
+              <h2>Novo presente</h2>
+            </div>
+          </div>
+
+          <form id="productForm" class="product-form">
+            <label class="field">
+              <span>Nome do produto *</span>
+              <input id="productName" required placeholder="Air Fryer">
+            </label>
+
+            <div class="two-fields">
+              <label class="field">
+                <span>Valor (R$) *</span>
+                <input id="productPrice" required type="number" min="0" step="0.01" placeholder="399.90">
+              </label>
+
+              <label class="field">
+                <span>Categoria *</span>
+                <input id="productCategory" required placeholder="Eletros">
+              </label>
+            </div>
+
+            <label class="field">
+              <span>Link da loja *</span>
+              <input id="productStoreUrl" required type="url" placeholder="https://...">
+            </label>
+
+            <label class="field">
+              <span>URL da imagem</span>
+              <input id="productImageUrl" type="url" placeholder="https://...">
+              <small>Opcional. Se ficar vazio, usamos uma imagem neutra.</small>
+            </label>
+
+            <label class="field">
+              <span>Descrição</span>
+              <textarea id="productDescription" rows="3" maxlength="280" placeholder="Opcional"></textarea>
+            </label>
+
+            <button class="button button-dark full" type="submit">+ Cadastrar presente</button>
+          </form>
+        </section>
+
+        <section class="panel panel-wide">
+          <div class="panel-heading">
+            <div>
+              <span class="modal-kicker">Controle</span>
+              <h2>Presentes e reservas</h2>
+            </div>
+            <button class="button button-light" id="refreshButton">↻ Atualizar</button>
+          </div>
+
+          <div id="adminProducts" class="admin-product-list"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
