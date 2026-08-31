@@ -155,6 +155,7 @@ function renderProducts() {
           <span class="gift-category">${escapeHtml(product.category || "Nosso lar")}</span>
           <h3>${escapeHtml(product.name)}</h3>
           <p class="gift-description">${escapeHtml(product.description || "Um mimo para o nosso futuro cantinho.")}</p>
+          ${product.cash_only ? `<p class="gift-category" style="margin-top:8px;">💚 Somente contribuição em dinheiro</p>` : ""}
           <div class="gift-price">${money(product.price)}</div>
 
           ${
@@ -184,6 +185,18 @@ function openGiftModal(product) {
   modalTitle.textContent = product.name;
   modalPrice.textContent = money(product.price);
   guestName.value = "";
+
+  const storeButton = document.getElementById("chooseStore");
+  const pixButton = document.getElementById("choosePix");
+
+  const storeAllowed = !product.cash_only && Boolean(product.store_url);
+  storeButton.classList.toggle("hidden", !storeAllowed);
+
+  if (!storeAllowed) {
+    pixButton.style.gridColumn = "1 / -1";
+  } else {
+    pixButton.style.gridColumn = "";
+  }
 
   chooseStep.classList.remove("hidden");
   resultStep.classList.add("hidden");
@@ -257,10 +270,16 @@ async function reserveGift(method) {
 }
 
 document.getElementById("chooseStore").addEventListener("click", async () => {
+  const product = state.selectedProduct;
+
+  if (!product || product.cash_only || !product.store_url) {
+    showToast("Este presente está disponível somente como contribuição em dinheiro.");
+    return;
+  }
+
   const reservation = await reserveGift("store");
   if (!reservation) return;
 
-  const product = state.selectedProduct;
   const storeUrl = safeUrl(product.store_url);
 
   chooseStep.classList.add("hidden");
