@@ -142,10 +142,21 @@ function renderProducts(products) {
 
   adminProducts.innerHTML = products.map(product => {
     const reservation = getReservation(product);
-    const method = reservation?.method === "pix" ? "PIX" : "Loja";
-    const paymentNote = reservation?.method === "pix"
-      ? (reservation.payment_reported ? " • convidado informou pagamento" : " • aguardando PIX")
-      : "";
+
+    const methodLabels = {
+      pix: "PIX",
+      store: "Loja",
+      credit: "Cartão / Mercado Pago"
+    };
+
+    const method = reservation ? (methodLabels[reservation.method] || reservation.method) : "";
+
+    const paymentNote =
+      reservation?.method === "pix"
+        ? (reservation.payment_reported ? " • convidado informou pagamento" : " • aguardando PIX")
+        : reservation?.method === "credit"
+          ? (reservation.payment_reported ? " • convidado informou pagamento" : " • aguardando pagamento")
+          : "";
 
     return `
       <article class="admin-product">
@@ -155,7 +166,8 @@ function renderProducts(products) {
           </span>
           <h3>${escapeHtml(product.name)}</h3>
           <p><strong>${money(product.price)}</strong> • ${escapeHtml(product.category || "Sem categoria")}</p>
-          ${product.cash_only ? `<p>💚 <b>Somente dinheiro / PIX</b></p>` : ""}
+          ${product.cash_only ? `<p>💚 <b>Sem compra em loja</b></p>` : ""}
+          ${product.payment_url ? `<p>💳 <b>Cartão habilitado</b></p>` : ""}
 
           ${
             reservation
@@ -302,6 +314,7 @@ document.getElementById("productForm").addEventListener("submit", async event =>
     category: document.getElementById("productCategory").value.trim(),
     cash_only: cashOnly,
     store_url: cashOnly ? null : storeUrlInput.value.trim(),
+    payment_url: document.getElementById("productPaymentUrl").value.trim() || null,
     image_url: document.getElementById("productImageUrl").value.trim() || null,
     description: document.getElementById("productDescription").value.trim() || null
   };
