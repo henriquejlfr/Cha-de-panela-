@@ -108,9 +108,23 @@ async function loadDashboard() {
 }
 
 function getReservation(product) {
-  return Array.isArray(product.reservations) && product.reservations.length
-    ? product.reservations[0]
-    : null;
+  const reservation = product.reservations;
+
+  if (!reservation) {
+    return null;
+  }
+
+  // O Supabase pode devolver uma lista...
+  if (Array.isArray(reservation)) {
+    return reservation.length ? reservation[0] : null;
+  }
+
+  // ...ou um único objeto, porque cada produto só pode ter uma reserva.
+  if (typeof reservation === "object") {
+    return reservation;
+  }
+
+  return null;
 }
 
 function renderStats(products) {
