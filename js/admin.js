@@ -110,19 +110,9 @@ async function loadDashboard() {
 function getReservation(product) {
   const reservation = product.reservations;
 
-  if (!reservation) {
-    return null;
-  }
-
-  // O Supabase pode devolver uma lista...
-  if (Array.isArray(reservation)) {
-    return reservation.length ? reservation[0] : null;
-  }
-
-  // ...ou um único objeto, porque cada produto só pode ter uma reserva.
-  if (typeof reservation === "object") {
-    return reservation;
-  }
+  if (!reservation) return null;
+  if (Array.isArray(reservation)) return reservation.length ? reservation[0] : null;
+  if (typeof reservation === "object") return reservation;
 
   return null;
 }
@@ -165,6 +155,7 @@ function renderProducts(products) {
           </span>
           <h3>${escapeHtml(product.name)}</h3>
           <p><strong>${money(product.price)}</strong> • ${escapeHtml(product.category || "Sem categoria")}</p>
+          ${product.cash_only ? `<p>💚 <b>Somente dinheiro / PIX</b></p>` : ""}
 
           ${
             reservation
@@ -277,14 +268,40 @@ function bindAdminActions() {
   });
 }
 
+const cashOnlyCheckbox = document.getElementById("productCashOnly");
+const storeUrlInput = document.getElementById("productStoreUrl");
+const storeUrlField = document.getElementById("storeUrlField");
+const storeRequiredMark = document.getElementById("storeRequiredMark");
+const storeUrlHelp = document.getElementById("storeUrlHelp");
+
+function updateStoreUrlField() {
+  const cashOnly = cashOnlyCheckbox.checked;
+
+  storeUrlInput.required = !cashOnly;
+  storeUrlInput.disabled = cashOnly;
+  storeRequiredMark.classList.toggle("hidden", cashOnly);
+  storeUrlField.style.opacity = cashOnly ? "0.48" : "1";
+  storeUrlHelp.textContent = cashOnly
+    ? "Desativado porque este presente será recebido somente em dinheiro."
+    : "Obrigatório para presentes que podem ser comprados em uma loja.";
+
+  if (cashOnly) storeUrlInput.value = "";
+}
+
+cashOnlyCheckbox.addEventListener("change", updateStoreUrlField);
+updateStoreUrlField();
+
 document.getElementById("productForm").addEventListener("submit", async event => {
   event.preventDefault();
+
+  const cashOnly = cashOnlyCheckbox.checked;
 
   const product = {
     name: document.getElementById("productName").value.trim(),
     price: Number(document.getElementById("productPrice").value),
     category: document.getElementById("productCategory").value.trim(),
-    store_url: document.getElementById("productStoreUrl").value.trim(),
+    cash_only: cashOnly,
+    store_url: cashOnly ? null : storeUrlInput.value.trim(),
     image_url: document.getElementById("productImageUrl").value.trim() || null,
     description: document.getElementById("productDescription").value.trim() || null
   };
@@ -297,7 +314,8 @@ document.getElementById("productForm").addEventListener("submit", async event =>
   }
 
   event.target.reset();
-  showToast("Presente cadastrado! 🎁");
+  updateStoreUrlField();
+  showToast(cashOnly ? "Presente em dinheiro cadastrado! 💚" : "Presente cadastrado! 🎁");
   loadDashboard();
 });
 
