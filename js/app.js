@@ -52,6 +52,17 @@ function safeUrl(value = "") {
   }
 }
 
+function embaralharLista(lista) {
+  const itens = [...lista];
+
+  for (let i = itens.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [itens[i], itens[j]] = [itens[j], itens[i]];
+  }
+
+  return itens;
+}
+
 function placeholderImage(name) {
   const label = encodeURIComponent(name || "Presente");
   return `https://placehold.co/800x600/eee5dc/69594c?text=${label}`;
@@ -95,9 +106,16 @@ async function loadProducts() {
     return;
   }
 
-  state.products = data || [];
-  buildFilters();
-  renderProducts();
+ if (state.products.length === 0) {
+  state.products = embaralharLista(data || []);
+} else {
+  const produtosAtualizados = new Map(
+    (data || []).map(produto => [String(produto.id), produto])
+  );
+
+  state.products = state.products
+    .map(produto => produtosAtualizados.get(String(produto.id)))
+    .filter(Boolean);
 }
 
 function buildFilters() {
