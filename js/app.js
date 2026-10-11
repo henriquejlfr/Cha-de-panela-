@@ -52,6 +52,12 @@ function safeUrl(value = "") {
   }
 }
 
+function placeholderImage(name) {
+  const label = encodeURIComponent(name || "Presente");
+  return `https://placehold.co/800x600/eee5dc/69594c?text=${label}`;
+}
+
+// Embaralha os presentes usando o algoritmo Fisher-Yates.
 function embaralharLista(lista) {
   const itens = [...lista];
 
@@ -61,11 +67,6 @@ function embaralharLista(lista) {
   }
 
   return itens;
-}
-
-function placeholderImage(name) {
-  const label = encodeURIComponent(name || "Presente");
-  return `https://placehold.co/800x600/eee5dc/69594c?text=${label}`;
 }
 
 function showToast(message) {
@@ -106,16 +107,38 @@ async function loadProducts() {
     return;
   }
 
- if (state.products.length === 0) {
-  state.products = embaralharLista(data || []);
-} else {
-  const produtosAtualizados = new Map(
-    (data || []).map(produto => [String(produto.id), produto])
-  );
+  const produtosRecebidos = data || [];
 
-  state.products = state.products
-    .map(produto => produtosAtualizados.get(String(produto.id)))
-    .filter(Boolean);
+  // Na primeira carga, embaralha a lista inteira.
+  if (state.products.length === 0) {
+    state.products = embaralharLista(produtosRecebidos);
+  } else {
+    // Nas atualizações seguintes, preserva a ordem atual,
+    // atualiza os dados e inclui eventuais produtos novos.
+    const produtosPorId = new Map(
+      produtosRecebidos.map(produto => [String(produto.id), produto])
+    );
+
+    const idsExistentes = new Set(state.products.map(
+      produto => String(produto.id)
+    ));
+
+    const produtosNaOrdemAtual = state.products
+      .map(produto => produtosPorId.get(String(produto.id)))
+      .filter(Boolean);
+
+    const produtosNovos = produtosRecebidos.filter(
+      produto => !idsExistentes.has(String(produto.id))
+    );
+
+    state.products = [
+      ...produtosNaOrdemAtual,
+      ...produtosNovos
+    ];
+  }
+
+  buildFilters();
+  renderProducts();
 }
 
 function buildFilters() {
@@ -148,7 +171,8 @@ function buildFilters() {
 
 function renderProducts() {
   const visible = state.products.filter(product =>
-    state.activeFilter === "todos" || product.category === state.activeFilter
+    state.activeFilter === "todos" ||
+    product.category === state.activeFilter
   );
 
   emptyState.classList.toggle("hidden", visible.length !== 0);
@@ -164,16 +188,29 @@ function renderProducts() {
                src="${escapeHtml(image)}"
                alt="${escapeHtml(product.name)}"
                onerror="this.src='${placeholderImage(product.name)}'">
+
           <span class="status-badge ${available ? "status-available" : "status-reserved"}">
             ${available ? "Disponível" : "Já escolhido ♡"}
           </span>
         </div>
 
         <div class="gift-content">
-          <span class="gift-category">${escapeHtml(product.category || "Nosso lar")}</span>
+          <span class="gift-category">
+            ${escapeHtml(product.category || "Nosso lar")}
+          </span>
+
           <h3>${escapeHtml(product.name)}</h3>
-          <p class="gift-description">${escapeHtml(product.description || "Um mimo para o nosso futuro cantinho.")}</p>
-          ${product.cash_only ? `<p class="gift-category" style="margin-top:8px;">💚 Somente contribuição em dinheiro</p>` : ""}
+
+          <p class="gift-description">
+            ${escapeHtml(product.description || "Um mimo para o nosso futuro cantinho.")}
+          </p>
+
+          ${
+            product.cash_only
+              ? `<p class="gift-category" style="margin-top:8px;">💚 Somente contribuição em dinheiro</p>`
+              : ""
+          }
+
           <div class="gift-price">${money(product.price)}</div>
 
           ${
@@ -190,8 +227,11 @@ function renderProducts() {
 
   document.querySelectorAll(".choose-gift").forEach(button => {
     button.addEventListener("click", () => {
-      const product = state.products.find(p => String(p.id) === button.dataset.id);
-      openGiftModal(product);
+      const product = state.products.find(
+        p => String(p.id) === button.dataset.id
+      );
+
+      if (product) openGiftModal(product);
     });
   });
 }
@@ -256,11 +296,13 @@ document.addEventListener("keydown", event => {
 
 function getGuestName() {
   const value = guestName.value.trim();
+
   if (value.length < 2) {
     showToast("Coloque seu nome antes de continuar.");
     guestName.focus();
     return null;
   }
+
   return value;
 }
 
@@ -331,6 +373,7 @@ document.getElementById("chooseStore").addEventListener("click", async () => {
         <a class="button button-dark" href="${storeUrl}" target="_blank" rel="noopener noreferrer">
           Abrir loja ↗
         </a>
+
         <button class="button button-light" id="confirmStorePurchase">
           ✓ Já fiz a compra
         </button>
@@ -342,7 +385,9 @@ document.getElementById("chooseStore").addEventListener("click", async () => {
     </div>
   `;
 
-  document.getElementById("confirmStorePurchase").addEventListener("click", confirmStorePurchase);
+  document.getElementById("confirmStorePurchase")
+    .addEventListener("click", confirmStorePurchase);
+
   await loadProducts();
 });
 
@@ -373,7 +418,9 @@ async function confirmStorePurchase() {
     </div>
   `;
 
-  resultStep.querySelector("[data-finish]").addEventListener("click", closeModal);
+  resultStep.querySelector("[data-finish]")
+    .addEventListener("click", closeModal);
+
   await loadProducts();
 }
 
@@ -418,7 +465,9 @@ document.getElementById("choosePix").addEventListener("click", async () => {
     }
   });
 
-  document.getElementById("reportPix").addEventListener("click", () => reportPayment("pix"));
+  document.getElementById("reportPix")
+    .addEventListener("click", () => reportPayment("pix"));
+
   await loadProducts();
 });
 
@@ -440,7 +489,9 @@ async function reportPayment(method) {
   if (error) {
     if (button) {
       button.disabled = false;
-      button.textContent = method === "credit" ? "✓ Já fiz o pagamento" : "✓ Já fiz o PIX";
+      button.textContent = method === "credit"
+        ? "✓ Já fiz o pagamento"
+        : "✓ Já fiz o PIX";
     }
 
     showToast(error.message || "Não foi possível registrar o aviso.");
@@ -459,7 +510,8 @@ async function reportPayment(method) {
     </div>
   `;
 
-  resultStep.querySelector("[data-finish]").addEventListener("click", closeModal);
+  resultStep.querySelector("[data-finish]")
+    .addEventListener("click", closeModal);
 }
 
 document.getElementById("chooseCredit").addEventListener("click", async () => {
