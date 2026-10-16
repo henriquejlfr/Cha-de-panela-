@@ -1,8 +1,3 @@
--- =========================================================
--- CHÁ DE PANELA - BANCO SUPABASE
--- Cole TODO este arquivo no SQL Editor do Supabase e execute.
--- =========================================================
-
 create extension if not exists pgcrypto;
 
 create table if not exists public.products (
